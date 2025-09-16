@@ -66,13 +66,20 @@ const App = () => {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="max-w-xs">
+          <div className="max-w-m flex items-center space-x-4">
             <Dropdown
               value={selectedPeriod}
               onChange={handlePeriodChange}
               options={periodOptions}
-              label="Forecast Period"
+            //   label="Forecast Period"
             />
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={exportToCSV}I
+              disabled={!forecastData || forecastData.length === 0}
+            >
+              Export to CSV
+            </button>
           </div>
         </div>
         {error && (
@@ -80,19 +87,13 @@ const App = () => {
             <p className="text-red-700">{error}</p>
           </div>
         )}
-        <StatsCards data={forecastData} />
+        {/* <StatsCards data={forecastData} /> */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Forecast Comparison ({selectedPeriod} days)
           </h2>
           <ForecastChart data={forecastData} loading={loading} />
-              <button
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={exportToCSV}
-                disabled={!forecastData || forecastData.length === 0}
-              >
-                Export to CSV
-              </button>
+              
         </div>
       </main>
     </div>
