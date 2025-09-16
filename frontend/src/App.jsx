@@ -11,6 +11,28 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+    // Export forecastData to CSV
+    const exportToCSV = () => {
+      if (!forecastData || forecastData.length === 0) return;
+      // Get keys from first object
+      const keys = Object.keys(forecastData[0]);
+      const csvRows = [keys.join(",")];
+      forecastData.forEach(row => {
+        const values = keys.map(k => JSON.stringify(row[k] ?? ""));
+        csvRows.push(values.join(","));
+      });
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `forecast_${selectedPeriod}days.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
   const periodOptions = [
     { value: 30, label: 'Next 1 Month (30 days)' },
     { value: 90, label: 'Next 3 Months (90 days)' },
@@ -64,6 +86,13 @@ const App = () => {
             Forecast Comparison ({selectedPeriod} days)
           </h2>
           <ForecastChart data={forecastData} loading={loading} />
+              <button
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={exportToCSV}
+                disabled={!forecastData || forecastData.length === 0}
+              >
+                Export to CSV
+              </button>
         </div>
       </main>
     </div>
