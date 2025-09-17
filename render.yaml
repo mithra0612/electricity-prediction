@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: electricity-prediction-backend
+    env: python
+    rootDir: backend
+    pythonVersion: "3.10.13"
+    buildCommand: pip install -r requirements.txt
+    startCommand: ./start.sh
+    plan: free
