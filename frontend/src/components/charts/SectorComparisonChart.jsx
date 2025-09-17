@@ -2,6 +2,8 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const SectorComparisonChart = ({ data }) => {
+  console.log('[SectorComparisonChart] data:', data);
+
   const blueShades = [
     '#1e40af', // blue-800
     '#2563eb', // blue-600

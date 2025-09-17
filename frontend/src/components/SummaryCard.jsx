@@ -18,4 +18,3 @@ const SummaryCard = ({ title, value, unit, icon }) => {
 };
 
 export default SummaryCard;
-  

@@ -1,7 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CustomTooltip } from '../../common/CustomTooltip';
-import { COLORS } from '../../utils/dataGenerators';
 
 // Blue shades palette
 const BLUE_SHADES = {
@@ -14,7 +13,15 @@ const BLUE_SHADES = {
 };
 
 const ConsumptionTrendsChart = ({ data, highlightedSector, setHighlightedSector }) => {
-  const sectorKeys = Object.keys(COLORS);
+  console.log('[ConsumptionTrendsChart] data:', data);
+
+  const sectorKeys = [
+    'Staff Quarters',
+    'Academic Blocks',
+    'Hostels',
+    'Chiller Plants',
+    'STP'
+  ];
   
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl">
