@@ -6,10 +6,6 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <header className="app-header">
-        <Zap size={32} />
-        <h1>Electricity Prediction Dashboard</h1>
-      </header>
       <SolarDashboard />
     </div>
   );
