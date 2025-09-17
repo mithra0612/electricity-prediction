@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Zap, TrendingUp } from 'lucide-react';
-import { generateSolarData, generateConsumptionData } from '../utils/dataGenerators';
 import SummaryCard from './SummaryCard';
 import SolarGenerationChart from './charts/SolarGenerationChart';
 import ConsumptionPieChart from './charts/ConsumptionPieChart';
@@ -10,23 +9,63 @@ import SectorComparisonChart from './charts/SectorComparisonChart';
 const SolarDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('1');
   const [highlightedSector, setHighlightedSector] = useState(null);
+  const [forecastData, setForecastData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const solarData = useMemo(() => generateSolarData(parseInt(selectedPeriod)), [selectedPeriod]);
-  const consumptionData = useMemo(() => generateConsumptionData(parseInt(selectedPeriod)), [selectedPeriod]);
+  // Fetch backend forecast data when selectedPeriod changes
+  useEffect(() => {
+    setLoading(true);
+    console.log('[SolarDashboard] API /forecast POST with months:', selectedPeriod);
+    fetch(`http://localhost:8000/forecast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ months: parseInt(selectedPeriod) })
+    })
+      .then(res => {
+        console.log('[SolarDashboard] API /forecast status:', res.status, res.statusText);
+        return res.json();
+      })
+      .then(data => {
+        console.log('[SolarDashboard] API /forecast response:', data);
+        setForecastData(data.forecast || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('[SolarDashboard] API /forecast error:', err);
+        setLoading(false);
+      });
+  }, [selectedPeriod]);
+
+  // Prepare chart data from backend response
+  const solarData = useMemo(() => {
+    return forecastData.map(day => ({
+      date: day.date,
+      generation: day.prediction.power_generation_by_solar_panels
+    }));
+  }, [forecastData]);
+
+  const consumptionData = useMemo(() => {
+    return forecastData.map(day => ({
+      date: day.date,
+      'Staff Quarters': day.prediction?.consumption_Staff_quarters ?? 0,
+      'Academic Blocks': day.prediction?.consumption_Academic_blocks ?? 0,
+      'Hostels': day.prediction?.consumption_Hostels ?? 0,
+      'Chiller Plants': day.prediction?.["consumption_Chiller plant"] ?? 0,
+      'STP': day.prediction?.consumption_STP ?? 0
+    }));
+  }, [forecastData]);
 
   const pieData = useMemo(() => {
     const sectors = ['Staff Quarters', 'Academic Blocks', 'Hostels', 'Chiller Plants', 'STP'];
     const totals = sectors.reduce((acc, sector) => {
-      acc[sector] = consumptionData.reduce((sum, day) => sum + day[sector], 0);
+      acc[sector] = consumptionData.reduce((sum, day) => sum + (day[sector] || 0), 0);
       return acc;
     }, {});
-    
     const grandTotal = Object.values(totals).reduce((sum, val) => sum + val, 0);
-    
     return sectors.map(sector => ({
       name: sector,
       value: totals[sector],
-      percentage: ((totals[sector] / grandTotal) * 100).toFixed(1)
+      percentage: grandTotal ? ((totals[sector] / grandTotal) * 100).toFixed(1) : 0
     }));
   }, [consumptionData]);
 
@@ -34,13 +73,13 @@ const SolarDashboard = () => {
     const sectors = ['Staff Quarters', 'Academic Blocks', 'Hostels', 'Chiller Plants', 'STP'];
     return sectors.map(sector => ({
       sector: sector.replace(' ', '\n'),
-      consumption: consumptionData.reduce((sum, day) => sum + day[sector], 0)
+      consumption: consumptionData.reduce((sum, day) => sum + (day[sector] || 0), 0)
     }));
   }, [consumptionData]);
 
-  const totalGeneration = solarData.reduce((sum, day) => sum + day.generation, 0);
-  const totalConsumption = barData.reduce((sum, sector) => sum + sector.consumption, 0);
-  const efficiencyRate = ((totalGeneration / totalConsumption) * 100).toFixed(1);
+  const totalGeneration = solarData.reduce((sum, day) => sum + (day.generation || 0), 0);
+  const totalConsumption = barData.reduce((sum, sector) => sum + (sector.consumption || 0), 0);
+  const efficiencyRate = totalConsumption ? ((totalGeneration / totalConsumption) * 100).toFixed(1) : 0;
 
   return (
     <div className="min-h-screen bg-blue-50 p-4 md:p-6">
@@ -94,7 +133,7 @@ const SolarDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <SummaryCard
             title="Total Generation"
-            value={totalGeneration.toLocaleString()}
+            value={loading ? '...' : totalGeneration.toLocaleString()}
             unit="kWh"
             gradient=""
             bgColor=""
@@ -103,7 +142,7 @@ const SolarDashboard = () => {
 
           <SummaryCard
             title="Total Consumption"
-            value={totalConsumption.toLocaleString()}
+            value={loading ? '...' : totalConsumption.toLocaleString()}
             unit="kWh"
             gradient=""
             bgColor=""
@@ -112,7 +151,7 @@ const SolarDashboard = () => {
 
           <SummaryCard
             title="Efficiency Rate"
-            value={efficiencyRate}
+            value={loading ? '...' : efficiencyRate}
             unit="%"
             gradient=""
             bgColor=""

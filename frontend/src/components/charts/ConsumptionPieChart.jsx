@@ -16,10 +16,12 @@ const BLUE_COLORS = [
 // Custom tooltip component
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const data = payload[0].payload;
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-100">
-        <p className="text-gray-800 font-medium">{`${payload[0].name}`}</p>
-        <p className="text-blue-600 font-semibold">{`${payload[0].value}%`}</p>
+        <p className="text-gray-800 font-medium">{data.name}</p>
+        <p className="text-blue-600 font-semibold">{data.value.toLocaleString()} kWh</p>
+        <p className="text-blue-600 font-semibold">{data.percentage}%</p>
       </div>
     );
   }
@@ -45,16 +47,8 @@ const CustomLegend = (props) => {
 };
 
 const ConsumptionPieChart = ({ data }) => {
-  // Sample data if none provided
-  const sampleData = [
-    { name: 'Electricity', value: 35 },
-    { name: 'Gas', value: 25 },
-    { name: 'Water', value: 20 },
-    { name: 'Heating', value: 15 },
-    { name: 'Other', value: 5 },
-  ];
-
-  const chartData = data || sampleData;
+  const chartData = data;
+  console.log('[ConsumptionPieChart] chartData:', chartData);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

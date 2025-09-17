@@ -3,6 +3,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { CustomTooltip } from '../../common/CustomTooltip';
 
 const SolarGenerationChart = ({ data }) => {
+  console.log('[SolarGenerationChart] data:', data);
+
   const formatMonthName = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short' });
