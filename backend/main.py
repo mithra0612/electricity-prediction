@@ -164,3 +164,13 @@ def health():
 @app.get("/")
 def read_root():
     return {"message": "Electricity Prediction API is running."}
+
+@app.get("/status")
+def status():
+    return {
+        "ann_model_loaded": ann_model is not None,
+        "lstm_model_loaded": lstm_model is not None,
+        "scaler_loaded": scaler is not None,
+        "df_loaded": df is not None,
+        "df_rows": len(df) if df is not None else 0
+    }
