@@ -6,7 +6,6 @@ import numpy as np
 import joblib
 from keras.models import load_model
 from keras.initializers import Orthogonal
-import time
 
 app = FastAPI()
 
@@ -118,7 +117,7 @@ def run_forecast(months: int):
     if not ann_model or not lstm_model or not scaler or df is None:
         raise HTTPException(status_code=500, detail="Models, scaler, or dataset not loaded.")
 
-    forecast_days = months * 30
+    forecast_days = min(months * 30, 180)
     last_window_df = df[features].iloc[-n_steps:]
     if last_window_df.shape[0] != n_steps:
         raise HTTPException(status_code=500, detail="Not enough data for forecasting.")
@@ -127,23 +126,35 @@ def run_forecast(months: int):
     current_ann = window_scaled.flatten()
     current_lstm = window_scaled.copy()
 
+    # Prepare input windows for batch prediction
+    ann_inputs = []
+    lstm_inputs = []
+    for i in range(forecast_days):
+        ann_inputs.append(current_ann.copy())
+        lstm_inputs.append(current_lstm.copy())
+        # Update sliding windows for next day
+        ann_pred = ann_model.predict(current_ann.reshape(1, -1), verbose=0)
+        lstm_pred = lstm_model.predict(current_lstm.reshape(1, n_steps, len(features)), verbose=0)
+        current_ann = np.concatenate([current_ann[len(features):], ann_pred.flatten()])
+        current_lstm = np.vstack([current_lstm[1:], lstm_pred])
+
+    ann_inputs = np.array(ann_inputs)
+    lstm_inputs = np.array(lstm_inputs)
+
+    # Batch prediction
+    ann_preds = ann_model.predict(ann_inputs, verbose=0)
+    lstm_preds = lstm_model.predict(lstm_inputs, verbose=0)
+    hybrid_preds = (ann_preds + lstm_preds) / 2
+    hybrid_preds_inv = scaler.inverse_transform(hybrid_preds)
+
     results = []
     last_date = df["date"].iloc[-1]
     for i in range(forecast_days):
-        ann_pred = ann_model.predict(current_ann.reshape(1, -1), verbose=0)
-        lstm_pred = lstm_model.predict(current_lstm.reshape(1, n_steps, len(features)), verbose=0)
-        hybrid_pred = (ann_pred.flatten() + lstm_pred.flatten()) / 2
-        hybrid_pred_inv = scaler.inverse_transform(hybrid_pred.reshape(1, -1)).flatten()
-
         forecast_date = last_date + pd.Timedelta(days=i+1)
         results.append({
             "date": forecast_date.strftime("%Y-%m-%d"),
-            "prediction": {f: float(v) for f, v in zip(features, hybrid_pred_inv)}
+            "prediction": {f: float(v) for f, v in zip(features, hybrid_preds_inv[i])}
         })
-
-        # Update sliding windows
-        current_ann = np.append(current_ann[len(features):], ann_pred.flatten())
-        current_lstm = np.vstack([current_lstm[1:], lstm_pred])
 
     return {"forecast": results}
 
@@ -153,11 +164,7 @@ def predict(request: PredictRequest):
 
 @app.post("/forecast")
 def forecast(request: ForecastRequest):
-    print("[main.py] /forecast endpoint called with months:", request.months)
-    start_time = time.time()
     result = run_forecast(request.months)
-    elapsed = time.time() - start_time
-    print(f"[main.py] /forecast result length: {len(result.get('forecast', []))}, took {elapsed:.2f}s")
     return result
 
 @app.get("/health")
@@ -167,3 +174,7 @@ def health():
 @app.get("/")
 def read_root():
     return {"message": "Electricity Prediction API is running."}
+
+# To further speed up, consider batching predictions:
+# Instead of calling ann_model.predict and lstm_model.predict inside the loop,
+# prepare all input windows and call .predict() once for all, then process results.
