@@ -16,7 +16,7 @@ const SolarDashboard = () => {
   useEffect(() => {
     setLoading(true);
     console.log('[SolarDashboard] API /forecast POST with months:', selectedPeriod);
-    fetch(`https://electricity-prediction-backend.onrender.com/forecast`, {
+    fetch(`http://localhost:8000/forecast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ months: parseInt(selectedPeriod) })
@@ -81,38 +81,6 @@ const SolarDashboard = () => {
   const totalConsumption = barData.reduce((sum, sector) => sum + (sector.consumption || 0), 0);
   const efficiencyRate = totalConsumption ? ((totalGeneration / totalConsumption) * 100).toFixed(1) : 0;
 
-  const SkeletonLoader = () => (
-    <div>
-      {/* Skeleton for summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {[1,2,3].map(i => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-2/3 mb-2"></div>
-            <div className="h-4 bg-gray-100 rounded w-1/3"></div>
-          </div>
-        ))}
-      </div>
-      {/* Skeleton for charts */}
-      <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
-        {[1,2].map(i => (
-          <div key={i} className="bg-white rounded-xl shadow-lg p-6 border border-blue-50 animate-pulse h-96">
-            <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-72 bg-gray-100 rounded"></div>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {[1,2].map(i => (
-          <div key={i} className="bg-white rounded-xl shadow-lg p-6 border border-blue-50 animate-pulse h-80">
-            <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-60 bg-gray-100 rounded"></div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -161,57 +129,51 @@ const SolarDashboard = () => {
           </div>
         </div>
 
-        {loading ? (
-          <SkeletonLoader />
-        ) : (
-          <>
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <SummaryCard
-                title="Total Generation"
-                value={totalGeneration.toLocaleString()}
-                unit="kWh"
-                gradient=""
-                bgColor=""
-                icon={<Sun className="w-8 h-8" />}
-              />
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <SummaryCard
+            title="Total Generation"
+            value={loading ? '...' : totalGeneration.toLocaleString()}
+            unit="kWh"
+            gradient=""
+            bgColor=""
+            icon={<Sun className="w-8 h-8" />}
+          />
 
-              <SummaryCard
-                title="Total Consumption"
-                value={totalConsumption.toLocaleString()}
-                unit="kWh"
-                gradient=""
-                bgColor=""
-                icon={<Zap className="w-8 h-8" />}
-              />
+          <SummaryCard
+            title="Total Consumption"
+            value={loading ? '...' : totalConsumption.toLocaleString()}
+            unit="kWh"
+            gradient=""
+            bgColor=""
+            icon={<Zap className="w-8 h-8" />}
+          />
 
-              <SummaryCard
-                title="Efficiency Rate"
-                value={efficiencyRate}
-                unit="%"
-                gradient=""
-                bgColor=""
-                icon={<TrendingUp className="w-8 h-8" />}
-              />
-            </div>
+          <SummaryCard
+            title="Efficiency Rate"
+            value={loading ? '...' : efficiencyRate}
+            unit="%"
+            gradient=""
+            bgColor=""
+            icon={<TrendingUp className="w-8 h-8" />}
+          />
+        </div>
 
-            {/* Main Charts Grid */}
-            <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
-              <SolarGenerationChart data={solarData} />
-              <ConsumptionPieChart data={pieData} />
-            </div>
+        {/* Main Charts Grid */}
+        <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
+          <SolarGenerationChart data={solarData} />
+          <ConsumptionPieChart data={pieData} />
+        </div>
 
-            {/* Secondary Charts Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <ConsumptionTrendsChart 
-                data={consumptionData} 
-                highlightedSector={highlightedSector}
-                setHighlightedSector={setHighlightedSector}
-              />
-              <SectorComparisonChart data={barData} />
-            </div>
-          </>
-        )}
+        {/* Secondary Charts Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <ConsumptionTrendsChart 
+            data={consumptionData} 
+            highlightedSector={highlightedSector}
+            setHighlightedSector={setHighlightedSector}
+          />
+          <SectorComparisonChart data={barData} />
+        </div>
       </div>
     </div>
   );
