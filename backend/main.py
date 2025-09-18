@@ -117,7 +117,7 @@ def run_forecast(months: int):
     if not ann_model or not lstm_model or not scaler or df is None:
         raise HTTPException(status_code=500, detail="Models, scaler, or dataset not loaded.")
 
-    forecast_days = min(months * 30, 180)
+    forecast_days = min(months * 30, 180)  # Keep original max limit for safety
     last_window_df = df[features].iloc[-n_steps:]
     if last_window_df.shape[0] != n_steps:
         raise HTTPException(status_code=500, detail="Not enough data for forecasting.")
@@ -126,13 +126,13 @@ def run_forecast(months: int):
     current_ann = window_scaled.flatten()
     current_lstm = window_scaled.copy()
 
-    # Prepare input windows for batch prediction
+    # Prepare all input windows for batch prediction
     ann_inputs = []
     lstm_inputs = []
-    for i in range(forecast_days):
+    for _ in range(forecast_days):
         ann_inputs.append(current_ann.copy())
         lstm_inputs.append(current_lstm.copy())
-        # Update sliding windows for next day
+        # Predict next day (single step, but don't store results yet)
         ann_pred = ann_model.predict(current_ann.reshape(1, -1), verbose=0)
         lstm_pred = lstm_model.predict(current_lstm.reshape(1, n_steps, len(features)), verbose=0)
         current_ann = np.concatenate([current_ann[len(features):], ann_pred.flatten()])
@@ -141,7 +141,7 @@ def run_forecast(months: int):
     ann_inputs = np.array(ann_inputs)
     lstm_inputs = np.array(lstm_inputs)
 
-    # Batch prediction
+    # Batch prediction for all days at once
     ann_preds = ann_model.predict(ann_inputs, verbose=0)
     lstm_preds = lstm_model.predict(lstm_inputs, verbose=0)
     hybrid_preds = (ann_preds + lstm_preds) / 2
@@ -176,5 +176,7 @@ def read_root():
     return {"message": "Electricity Prediction API is running."}
 
 # To further speed up, consider batching predictions:
+# Instead of calling ann_model.predict and lstm_model.predict inside the loop,
+# prepare all input windows and call .predict() once for all, then process results.
 # Instead of calling ann_model.predict and lstm_model.predict inside the loop,
 # prepare all input windows and call .predict() once for all, then process results.
