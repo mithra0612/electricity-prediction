@@ -174,3 +174,7 @@ def status():
         "df_loaded": df is not None,
         "df_rows": len(df) if df is not None else 0
     }
+
+# Make sure scikit-learn is installed before redeploying:
+# pip install scikit-learn
+# scikit-learn is installed. You can redeploy and your scaler will load.
