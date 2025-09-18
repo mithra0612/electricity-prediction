@@ -4,6 +4,10 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import joblib
+try:
+    import sklearn  # Ensure sklearn is imported before loading scaler
+except ImportError as e:
+    print(f"Warning: scikit-learn not installed. Scaler may not load. ({e})")
 from keras.models import load_model
 from keras.initializers import Orthogonal
 
@@ -53,6 +57,7 @@ def load_models():
         print("Scaler loaded (hardcoded n_steps and features).")
     except Exception as e:
         print(f"Scaler not loaded: {e}")
+        print("Hint: Make sure scikit-learn is installed (pip install scikit-learn).")
 
     try:
         df = pd.read_excel("Final.xlsx")
