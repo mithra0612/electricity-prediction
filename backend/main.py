@@ -4,12 +4,9 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import joblib
-try:
-    import sklearn  # Ensure sklearn is imported before loading scaler
-except ImportError as e:
-    print(f"Warning: scikit-learn not installed. Scaler may not load. ({e})")
 from keras.models import load_model
 from keras.initializers import Orthogonal
+import time
 
 app = FastAPI()
 
@@ -57,7 +54,6 @@ def load_models():
         print("Scaler loaded (hardcoded n_steps and features).")
     except Exception as e:
         print(f"Scaler not loaded: {e}")
-        print("Hint: Make sure scikit-learn is installed (pip install scikit-learn).")
 
     try:
         df = pd.read_excel("Final.xlsx")
@@ -158,8 +154,10 @@ def predict(request: PredictRequest):
 @app.post("/forecast")
 def forecast(request: ForecastRequest):
     print("[main.py] /forecast endpoint called with months:", request.months)
+    start_time = time.time()
     result = run_forecast(request.months)
-    print("[main.py] /forecast result length:", len(result.get("forecast", [])))
+    elapsed = time.time() - start_time
+    print(f"[main.py] /forecast result length: {len(result.get('forecast', []))}, took {elapsed:.2f}s")
     return result
 
 @app.get("/health")
@@ -169,17 +167,3 @@ def health():
 @app.get("/")
 def read_root():
     return {"message": "Electricity Prediction API is running."}
-
-@app.get("/status")
-def status():
-    return {
-        "ann_model_loaded": ann_model is not None,
-        "lstm_model_loaded": lstm_model is not None,
-        "scaler_loaded": scaler is not None,
-        "df_loaded": df is not None,
-        "df_rows": len(df) if df is not None else 0
-    }
-
-# Make sure scikit-learn is installed before redeploying:
-# pip install scikit-learn
-# scikit-learn is installed. You can redeploy and your scaler will load.
