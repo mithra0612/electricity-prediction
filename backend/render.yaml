@@ -3,7 +3,7 @@ services:
     name: electricity-prediction-backend
     env: python
     rootDir: backend
-    pythonVersion: "3.10.13"
+    pythonVersion: "3.13.4"
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     plan: free
