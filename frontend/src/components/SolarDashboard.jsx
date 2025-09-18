@@ -16,7 +16,7 @@ const SolarDashboard = () => {
   useEffect(() => {
     setLoading(true);
     console.log('[SolarDashboard] API /forecast POST with months:', selectedPeriod);
-    fetch(`http://localhost:8000/forecast`, {
+    fetch(`https://electricity-prediction-1hra.onrender.com/forecast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ months: parseInt(selectedPeriod) })
