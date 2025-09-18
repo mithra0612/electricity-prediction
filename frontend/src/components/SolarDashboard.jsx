@@ -81,6 +81,29 @@ const SolarDashboard = () => {
   const totalConsumption = barData.reduce((sum, sector) => sum + (sector.consumption || 0), 0);
   const efficiencyRate = totalConsumption ? ((totalGeneration / totalConsumption) * 100).toFixed(1) : 0;
 
+  const SkeletonLoader = () => (
+    <div>
+      {/* Skeleton for Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {[1,2,3].map(i => (
+          <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-28 p-6" />
+        ))}
+      </div>
+      {/* Skeleton for Main Charts */}
+      <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
+        {[1,2].map(i => (
+          <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-96" />
+        ))}
+      </div>
+      {/* Skeleton for Secondary Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {[1,2].map(i => (
+          <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-80" />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -129,51 +152,57 @@ const SolarDashboard = () => {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <SummaryCard
-            title="Total Generation"
-            value={loading ? '...' : totalGeneration.toLocaleString()}
-            unit="kWh"
-            gradient=""
-            bgColor=""
-            icon={<Sun className="w-8 h-8" />}
-          />
+        {loading ? (
+          <SkeletonLoader />
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <SummaryCard
+                title="Total Generation"
+                value={totalGeneration.toLocaleString()}
+                unit="kWh"
+                gradient=""
+                bgColor=""
+                icon={<Sun className="w-8 h-8" />}
+              />
 
-          <SummaryCard
-            title="Total Consumption"
-            value={loading ? '...' : totalConsumption.toLocaleString()}
-            unit="kWh"
-            gradient=""
-            bgColor=""
-            icon={<Zap className="w-8 h-8" />}
-          />
+              <SummaryCard
+                title="Total Consumption"
+                value={totalConsumption.toLocaleString()}
+                unit="kWh"
+                gradient=""
+                bgColor=""
+                icon={<Zap className="w-8 h-8" />}
+              />
 
-          <SummaryCard
-            title="Efficiency Rate"
-            value={loading ? '...' : efficiencyRate}
-            unit="%"
-            gradient=""
-            bgColor=""
-            icon={<TrendingUp className="w-8 h-8" />}
-          />
-        </div>
+              <SummaryCard
+                title="Efficiency Rate"
+                value={efficiencyRate}
+                unit="%"
+                gradient=""
+                bgColor=""
+                icon={<TrendingUp className="w-8 h-8" />}
+              />
+            </div>
 
-        {/* Main Charts Grid */}
-        <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
-          <SolarGenerationChart data={solarData} />
-          <ConsumptionPieChart data={pieData} />
-        </div>
+            {/* Main Charts Grid */}
+            <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
+              <SolarGenerationChart data={solarData} />
+              <ConsumptionPieChart data={pieData} />
+            </div>
 
-        {/* Secondary Charts Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <ConsumptionTrendsChart 
-            data={consumptionData} 
-            highlightedSector={highlightedSector}
-            setHighlightedSector={setHighlightedSector}
-          />
-          <SectorComparisonChart data={barData} />
-        </div>
+            {/* Secondary Charts Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <ConsumptionTrendsChart 
+                data={consumptionData} 
+                highlightedSector={highlightedSector}
+                setHighlightedSector={setHighlightedSector}
+              />
+              <SectorComparisonChart data={barData} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
