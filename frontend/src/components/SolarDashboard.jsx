@@ -49,14 +49,14 @@ const SolarDashboard = () => {
       date: day.date,
       'Staff Quarters': day.prediction?.consumption_Staff_quarters ?? 0,
       'Academic Blocks': day.prediction?.consumption_Academic_blocks ?? 0,
-      'Hostels': day.prediction?.consumption_Hostels ?? 0,
+      'Hostel Buildings': day.prediction?.consumption_Hostels ?? 0,
       'Chiller Plants': day.prediction?.["consumption_Chiller plant"] ?? 0,
       'STP': day.prediction?.consumption_STP ?? 0
     }));
   }, [forecastData]);
 
   const pieData = useMemo(() => {
-    const sectors = ['Staff Quarters', 'Academic Blocks', 'Hostels', 'Chiller Plants', 'STP'];
+    const sectors = ['Staff Quarters', 'Academic Blocks', 'Hostel Buildings', 'Chiller Plants', 'STP'];
     const totals = sectors.reduce((acc, sector) => {
       acc[sector] = consumptionData.reduce((sum, day) => sum + (day[sector] || 0), 0);
       return acc;
