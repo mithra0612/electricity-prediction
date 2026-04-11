@@ -16,7 +16,7 @@ const SolarDashboard = () => {
   useEffect(() => {
     setLoading(true);
     console.log('[SolarDashboard] API /forecast POST with months:', selectedPeriod);
-    fetch(`https://electricity-prediction-1hra.onrender.com/forecast`, {
+    fetch(`https://electricity-prediction-4.onrender.com/forecast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ months: parseInt(selectedPeriod) })
@@ -81,86 +81,89 @@ const SolarDashboard = () => {
   const totalConsumption = barData.reduce((sum, sector) => sum + (sector.consumption || 0), 0);
   const efficiencyRate = totalConsumption ? ((totalGeneration / totalConsumption) * 100).toFixed(1) : 0;
 
-  const SkeletonLoader = () => (
-    <div>
-      {/* Skeleton for Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {[1,2,3].map(i => (
-          <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-28 p-6" />
-        ))}
-      </div>
-      {/* Skeleton for Main Charts */}
-      <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
-        {[1,2].map(i => (
-          <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-96" />
-        ))}
-      </div>
-      {/* Skeleton for Secondary Charts */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {[1,2].map(i => (
-          <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-80" />
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6 transition-all duration-300 hover:shadow-lg border border-blue-100">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Solar Power Prediction & Consumption Dashboard
-              </h1>
-              <p className="text-gray-600">Real-time monitoring and forecasting</p>
+        {/* Skeleton Loader */}
+        {loading && (
+          <div className="animate-pulse mb-6">
+            <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-blue-100">
+              <div className="h-8 bg-blue-100 rounded w-2/3 mb-2"></div>
+              <div className="h-4 bg-blue-100 rounded w-1/3 mb-4"></div>
+              <div className="flex gap-4">
+                <div className="h-10 w-24 bg-blue-100 rounded"></div>
+                <div className="h-10 w-24 bg-blue-100 rounded"></div>
+                <div className="h-10 w-24 bg-blue-100 rounded"></div>
+              </div>
             </div>
-            
-            <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-gray-700 text-center">Time Period</label>
-              <div className="relative bg-gray-100 p-1 rounded-lg shadow-inner">
-                <div className="flex">
-                  {/*
-                    Replaced the dropdown with a custom segmented control
-                    Using button-style tabs with smooth transitions and hover effects
-                    Added visual indicators for the active selection
-                  */}
-                  {/*
-                    Time period options for the segmented control
-                  */}
-                  { [
-                    { value: '1', label: '1 Month' },
-                    { value: '3', label: '3 Months' },
-                    { value: '6', label: '6 Months' }
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setSelectedPeriod(option.value)}
-                      className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 transform ${
-                        selectedPeriod === option.value
-                          ? 'bg-blue-500 text-white shadow-md scale-105 z-10'
-                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  )) }
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="h-24 bg-blue-100 rounded"></div>
+              <div className="h-24 bg-blue-100 rounded"></div>
+              <div className="h-24 bg-blue-100 rounded"></div>
+            </div>
+            <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 mb-6">
+              <div className="h-64 bg-blue-100 rounded"></div>
+              <div className="h-64 bg-blue-100 rounded"></div>
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="h-64 bg-blue-100 rounded"></div>
+              <div className="h-64 bg-blue-100 rounded"></div>
+            </div>
+          </div>
+        )}
+        {/* Main Dashboard Content */}
+        {!loading && (
+          <>
+            {/* Header Section */}
+            <div className="bg-white rounded-xl shadow-md p-6 mb-6 transition-all duration-300 hover:shadow-lg border border-blue-100">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    Solar Power Prediction & Consumption Dashboard
+                  </h1>
+                  <p className="text-gray-600">Real-time monitoring and forecasting</p>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <label className="text-sm font-medium text-gray-700 text-center">Time Period</label>
+                  <div className="relative bg-gray-100 p-1 rounded-lg shadow-inner">
+                    <div className="flex">
+                      {/*
+                        Replaced the dropdown with a custom segmented control
+                        Using button-style tabs with smooth transitions and hover effects
+                        Added visual indicators for the active selection
+                      */}
+                      {/*
+                        Time period options for the segmented control
+                      */}
+                      { [
+                        { value: '1', label: '1 Month' },
+                        { value: '3', label: '3 Months' },
+                        { value: '6', label: '6 Months' }
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setSelectedPeriod(option.value)}
+                          className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 transform ${
+                            selectedPeriod === option.value
+                              ? 'bg-blue-500 text-white shadow-md scale-105 z-10'
+                              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      )) }
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {loading ? (
-          <SkeletonLoader />
-        ) : (
-          <>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <SummaryCard
                 title="Total Generation"
-                value={totalGeneration.toLocaleString()}
+                value={loading ? '...' : totalGeneration.toLocaleString()}
                 unit="kWh"
                 gradient=""
                 bgColor=""
@@ -169,7 +172,7 @@ const SolarDashboard = () => {
 
               <SummaryCard
                 title="Total Consumption"
-                value={totalConsumption.toLocaleString()}
+                value={loading ? '...' : totalConsumption.toLocaleString()}
                 unit="kWh"
                 gradient=""
                 bgColor=""
@@ -178,7 +181,7 @@ const SolarDashboard = () => {
 
               <SummaryCard
                 title="Efficiency Rate"
-                value={efficiencyRate}
+                value={loading ? '...' : efficiencyRate}
                 unit="%"
                 gradient=""
                 bgColor=""
