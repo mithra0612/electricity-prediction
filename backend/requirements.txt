@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+pandas
+numpy
+joblib
+openpyxl
+scikit-learn
+tensorflow-cpu==2.20.0
