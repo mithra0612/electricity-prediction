@@ -6,6 +6,7 @@ import numpy as np
 import joblib
 from keras.models import load_model
 from keras.initializers import Orthogonal
+import tensorflow as tf
 
 app = FastAPI()
 
@@ -21,6 +22,8 @@ app.add_middleware(
 # Global variables
 ann_model = None
 lstm_model = None
+predict_ann_compiled = None
+predict_lstm_compiled = None
 scaler = None
 df = None
 n_steps = 30  # Fixed from training
@@ -35,7 +38,7 @@ features = [
 
 @app.on_event("startup")
 def load_models():
-    global ann_model, lstm_model, scaler, df, n_steps, features
+    global ann_model, lstm_model, predict_ann_compiled, predict_lstm_compiled, scaler, df, n_steps, features
     try:
         ann_model = load_model("ann_model.keras")
         print("ANN model loaded.")
@@ -47,6 +50,18 @@ def load_models():
         print("LSTM model loaded.")
     except Exception as e:
         print(f"LSTM model not loaded: {e}")
+
+    # Set up compiled functions if models loaded
+    if ann_model is not None:
+        predict_ann_compiled = tf.function(
+            lambda x: ann_model(x, training=False),
+            input_signature=[tf.TensorSpec(shape=[1, 180], dtype=tf.float32)]
+        )
+    if lstm_model is not None:
+        predict_lstm_compiled = tf.function(
+            lambda x: lstm_model(x, training=False),
+            input_signature=[tf.TensorSpec(shape=[1, 30, 6], dtype=tf.float32)]
+        )
 
     try:
         scaler = joblib.load("scaler.pkl")
@@ -91,7 +106,7 @@ def get_window_ending_at(date_str):
     return window_scaled
 
 def run_prediction(date: str):
-    global ann_model, lstm_model, scaler, df, n_steps, features
+    global ann_model, lstm_model, predict_ann_compiled, predict_lstm_compiled, scaler, df, n_steps, features
     if not ann_model or not lstm_model or not scaler or df is None:
         raise HTTPException(status_code=500, detail="Models, scaler, or dataset not loaded.")
 
@@ -102,8 +117,11 @@ def run_prediction(date: str):
     X_ann = window_scaled.flatten().reshape(1, -1)
     X_lstm = window_scaled.reshape(1, n_steps, len(features))
 
-    ann_pred = ann_model.predict(X_ann, verbose=0)
-    lstm_pred = lstm_model.predict(X_lstm, verbose=0)
+    x_ann_t = tf.convert_to_tensor(X_ann, dtype=tf.float32)
+    x_lstm_t = tf.convert_to_tensor(X_lstm, dtype=tf.float32)
+
+    ann_pred = predict_ann_compiled(x_ann_t).numpy()
+    lstm_pred = predict_lstm_compiled(x_lstm_t).numpy()
     hybrid_pred = (ann_pred.flatten() + lstm_pred.flatten()) / 2
     hybrid_pred = scaler.inverse_transform(hybrid_pred.reshape(1, -1)).flatten()
 
@@ -113,7 +131,7 @@ def run_prediction(date: str):
     }
 
 def run_forecast(months: int):
-    global ann_model, lstm_model, scaler, df, n_steps, features
+    global ann_model, lstm_model, predict_ann_compiled, predict_lstm_compiled, scaler, df, n_steps, features
     if not ann_model or not lstm_model or not scaler or df is None:
         raise HTTPException(status_code=500, detail="Models, scaler, or dataset not loaded.")
 
@@ -126,35 +144,27 @@ def run_forecast(months: int):
     current_ann = window_scaled.flatten()
     current_lstm = window_scaled.copy()
 
-    # Prepare all input windows for batch prediction
-    ann_inputs = []
-    lstm_inputs = []
-    for _ in range(forecast_days):
-        ann_inputs.append(current_ann.copy())
-        lstm_inputs.append(current_lstm.copy())
-        # Predict next day (single step, but don't store results yet)
-        ann_pred = ann_model.predict(current_ann.reshape(1, -1), verbose=0)
-        lstm_pred = lstm_model.predict(current_lstm.reshape(1, n_steps, len(features)), verbose=0)
-        current_ann = np.concatenate([current_ann[len(features):], ann_pred.flatten()])
-        current_lstm = np.vstack([current_lstm[1:], lstm_pred])
-
-    ann_inputs = np.array(ann_inputs)
-    lstm_inputs = np.array(lstm_inputs)
-
-    # Batch prediction for all days at once
-    ann_preds = ann_model.predict(ann_inputs, verbose=0)
-    lstm_preds = lstm_model.predict(lstm_inputs, verbose=0)
-    hybrid_preds = (ann_preds + lstm_preds) / 2
-    hybrid_preds_inv = scaler.inverse_transform(hybrid_preds)
-
     results = []
     last_date = df["date"].iloc[-1]
     for i in range(forecast_days):
+        x_ann_t = tf.convert_to_tensor(current_ann.reshape(1, -1), dtype=tf.float32)
+        x_lstm_t = tf.convert_to_tensor(current_lstm.reshape(1, n_steps, len(features)), dtype=tf.float32)
+
+        # Predict using compiled tf.function
+        ann_pred = predict_ann_compiled(x_ann_t).numpy()
+        lstm_pred = predict_lstm_compiled(x_lstm_t).numpy()
+
+        hybrid_pred = (ann_pred.flatten() + lstm_pred.flatten()) / 2
+        hybrid_pred_inv = scaler.inverse_transform(hybrid_pred.reshape(1, -1)).flatten()
+
         forecast_date = last_date + pd.Timedelta(days=i+1)
         results.append({
             "date": forecast_date.strftime("%Y-%m-%d"),
-            "prediction": {f: float(v) for f, v in zip(features, hybrid_preds_inv[i])}
+            "prediction": {f: float(v) for f, v in zip(features, hybrid_pred_inv)}
         })
+
+        current_ann = np.concatenate([current_ann[len(features):], ann_pred.flatten()])
+        current_lstm = np.vstack([current_lstm[1:], lstm_pred])
 
     return {"forecast": results}
 

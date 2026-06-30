@@ -15,8 +15,12 @@ const SolarDashboard = () => {
   // Fetch backend forecast data when selectedPeriod changes
   useEffect(() => {
     setLoading(true);
-    console.log('[SolarDashboard] API /forecast POST with months:', selectedPeriod);
-    fetch(`https://electricity-prediction-4.onrender.com/forecast`, {
+
+    const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8000'
+      : 'https://electricity-prediction-4.onrender.com';
+    console.log(`[SolarDashboard] API /forecast POST to ${backendUrl} with months:`, selectedPeriod);
+    fetch(`${backendUrl}/forecast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ months: parseInt(selectedPeriod) })
