@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: electricity-prediction-backend
+    name: powerpredict-backend
     env: python
     rootDir: backend
     pythonVersion: "3.13.4"

@@ -119,9 +119,9 @@ const SolarDashboard = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                    Solar Power Prediction & Consumption Dashboard
+                    PowerPredict
                   </h1>
-                  <p className="text-gray-600">Real-time monitoring and forecasting</p>
+                  <p className="text-gray-600">Solar Power Prediction & Consumption Dashboard</p>
                 </div>
                 
                 <div className="flex flex-col gap-3">

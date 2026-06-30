@@ -173,7 +173,7 @@ def health():
 
 @app.get("/")
 def read_root():
-    return {"message": "Electricity Prediction API is running."}
+    return {"message": "PowerPredict API is running."}
 
 # To further speed up, consider batching predictions:
 # Instead of calling ann_model.predict and lstm_model.predict inside the loop,

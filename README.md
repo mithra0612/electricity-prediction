@@ -1,4 +1,4 @@
-# Electricity Prediction
+# PowerPredict
 
 AI-powered full-stack web application for forecasting electricity consumption (sector-wise) and solar power generation using a hybrid ANN + LSTM inference pipeline.
 
@@ -58,7 +58,7 @@ AI-powered full-stack web application for forecasting electricity consumption (s
 ## Project Structure
 
 ```text
-electricity-prediction/
+powerpredict/
 	backend/
 		main.py
 		ann_model.keras
@@ -92,7 +92,7 @@ Health welcome message.
 Response example:
 
 ```json
-{ "message": "Electricity Prediction API is running." }
+{ "message": "PowerPredict API is running." }
 ```
 
 ### GET /health
